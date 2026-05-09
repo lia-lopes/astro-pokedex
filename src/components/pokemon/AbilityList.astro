@@ -1,5 +1,5 @@
 ---
-import type { Ability } from '../../pokeapi/pokemon';
+import type { Ability } from "../../pokeapi/pokemon";
 
 interface Props {
   abilities: Ability[];
@@ -13,11 +13,13 @@ const { abilities } = Astro.props;
 
   <ul>
     {
-      abilities.map((ability) => (
-        !ability.is_hidden
-          ? <li class="capitalize">{ability.pokemon_v2_ability.name.replaceAll("-", " ")}</li>
-          : <li class="capitalize text-gray-600">{ability.pokemon_v2_ability.name.replaceAll("-", " ")}</li>
-      ))
+      abilities.map(({ ability: { name }, is_hidden }) =>
+        !is_hidden ? (
+          <li class="capitalize">{name.replaceAll("-", " ")}</li>
+        ) : (
+          <li class="capitalize text-gray-600">{name.replaceAll("-", " ")}</li>
+        ),
+      )
     }
   </ul>
 </div>

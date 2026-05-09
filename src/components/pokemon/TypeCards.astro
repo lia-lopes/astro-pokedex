@@ -10,12 +10,12 @@ const { types } = Astro.props;
 
 <ul class="flex flex-wrap flex-row gap-2">
   {
-    types.map((type) => (
+    types.map(({ type: { name } }) => (
       <li
-        class="bg-[var(--typeColor)] capitalize font-bold py-1 px-2 text-white rounded-md text-sm"
-        style={{ "--typeColor": colorMap[type.pokemon_v2_type.name] }}
+        class="bg-(--typeColor) capitalize rounded-md block px-2 py-1 text-sm text-white"
+        style={{ "--typeColor": colorMap[name] }}
       >
-        {type.pokemon_v2_type.name}
+        {name}
       </li>
     ))
   }

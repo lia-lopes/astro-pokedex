@@ -1,6 +1,7 @@
 ---
-import "@fontsource/nunito";
-import { ViewTransitions } from "astro:transitions";
+import { Font } from "astro:assets";
+import { ClientRouter } from "astro:transitions";
+import "../global.css";
 
 interface Props {
   title: string;
@@ -9,35 +10,31 @@ interface Props {
 const { title } = Astro.props;
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" transition:animate="initial">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content={Astro.generator} />
-  <ViewTransitions fallback="animate" />
-  <slot name="head" />
-  <title>{title}</title>
-</head>
-<body>
-  <slot />
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <ClientRouter />
+    <Font cssVariable="--font-nunito" />
+    <slot name="head" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
 </html>
 
 <style is:global>
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    min-width: 0;
-  }
-
-  body, html, :root {
+  body,
+  html,
+  :root {
     min-height: 100dvh;
   }
 
   body {
-    font-family: 'Nunito', sans-serif;
+    font-family: "Nunito", sans-serif;
 
     display: flex;
   }

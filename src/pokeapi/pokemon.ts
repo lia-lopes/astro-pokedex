@@ -27,7 +27,7 @@ export type PokemonType = keyof typeof colorMap;
 export type Species = {
   name: string;
   id: number;
-  pokemon_v2_pokemons: Pokemon[];
+  pokemons: Pokemon[];
 };
 
 export type Pokemon = {
@@ -35,101 +35,113 @@ export type Pokemon = {
   name: string;
   height: number;
   weight: number;
-  pokemon_v2_pokemontypes: Type[];
-  pokemon_v2_pokemonabilities: Ability[];
-  pokemon_v2_pokemonsprites: [
+  types: Type[];
+  abilities: Ability[];
+  sprites: [
     {
       sprites: string | null;
-    }
+    },
   ];
   image?: GetImageResult;
 };
 
 export type Type = {
-  pokemon_v2_type: {
+  type: {
     name: PokemonType;
   };
 };
 
 export type Ability = {
-  pokemon_v2_ability: {
+  ability: {
     name: string;
   };
   is_hidden: boolean;
 };
 
 type QueryResult = {
-  pokemon_v2_pokemonspecies: Species[];
+  pokemonspecies: Species[];
 };
 
 const substituteSprite =
   "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/substitute.png";
 
-export const substituteImage = await getImage({
-  src: substituteSprite,
-  width: 96,
-  height: 96,
-  quality: "high"
-});
-
 const query = `
-  query getPokemon {
-    pokemon_v2_pokemonspecies(order_by: {id: asc}) {
-      name
+query getPokemon {
+  pokemonspecies(order_by: {id: asc}) {
+    name
+    id
+    pokemons {
       id
-      pokemon_v2_pokemons {
-        id
-        name
-        height
-        weight
-        pokemon_v2_pokemontypes {
-          pokemon_v2_type {
-            name
-          }
+      name
+      height
+      weight
+      types: pokemontypes {
+        type {
+          name
         }
-        pokemon_v2_pokemonabilities {
-          pokemon_v2_ability {
-            name
-          }
-          is_hidden
+      }
+      abilities: pokemonabilities {
+        ability {
+          name
         }
-        pokemon_v2_pokemonsprites {
-          sprites(path: "front_default")
-        }
+        is_hidden
+      }
+      sprites: pokemonsprites {
+        sprites(path: "front_default")
       }
     }
   }
+}
 `;
 
-console.log("Fetching...");
+console.log("Loading substitute image...");
 
+export const substitute = await getImage({
+  src: substituteSprite,
+  width: 96,
+  height: 96,
+  quality: "high",
+});
+
+console.log("Substitute image loaded.");
+
+console.log("Fetching...");
 console.time("fetch-poke");
 
 export const {
-  data: { pokemon_v2_pokemonspecies: pokemons },
-} = await fetch("https://beta.pokeapi.co/graphql/v1beta", {
+  data: { pokemonspecies: pokemons },
+} = await fetch("https://graphql.pokeapi.co/v1beta2", {
   method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "X-Method-Used": "graphql",
-  },
   body: JSON.stringify({ query }),
-}).then((pokemon) => pokemon.json() as Promise<{ data: QueryResult }>).then(async (pokemons) => {
-  for (const species of pokemons.data.pokemon_v2_pokemonspecies) {
-    for (const pokemon of species.pokemon_v2_pokemons) {
-      const sprite = pokemon.pokemon_v2_pokemonsprites[0]?.sprites ?? undefined;
+})
+  .then((pokemon) => pokemon.json() as Promise<{ data: QueryResult }>)
+  .then(async (pokemons) => {
+    const promises = [];
 
-      pokemon.image = sprite ? await getImage({
-        src: sprite,
-        alt: pokemon.name,
-        width: 96,
-        height: 96,
-        quality: "high"
-      }) : substituteImage;
+    for (const species of pokemons.data.pokemonspecies) {
+      for (const pokemon of species.pokemons) {
+        const sprite = pokemon.sprites[0]?.sprites ?? undefined;
+
+        if (!sprite) {
+          pokemon.image = substitute;
+          continue;
+        }
+
+        promises.push(
+          getImage({
+            src: sprite,
+            width: 96,
+            height: 96,
+            quality: "high",
+          }).then((image) => {
+            pokemon.image = image;
+          }),
+        );
+      }
     }
-  }
 
-  return pokemons;
-});
+    await Promise.all(promises);
+    return pokemons;
+  });
 
 console.timeEnd("fetch-poke");

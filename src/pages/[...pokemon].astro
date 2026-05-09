@@ -5,6 +5,8 @@ import PokeDisplay from "../components/PokeDisplay.astro";
 import { pokemons, type Species } from "../pokeapi/pokemon";
 import { Icon } from "astro-icon/components";
 
+export const prerender = true;
+
 interface Props {
   species: Species;
   next?: Species;
@@ -13,7 +15,7 @@ interface Props {
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const routes = pokemons.map((species) => ({
-    params: { pokemon: species.name },
+    params: { pokemon: `${species.name}/` },
     props: {
       species,
       last: pokemons[species.id - 2],
@@ -21,15 +23,16 @@ export const getStaticPaths: GetStaticPaths = async () => {
     },
   }));
 
-  return [{
+  return [
+    {
       params: { pokemon: "/" },
       props: routes[0]!.props,
     },
-    ...routes
-  ]
+    ...routes,
+  ];
 };
 
-console.log(Astro.url.pathname)
+console.log(Astro.url.pathname);
 
 function capitalize(sentence: string) {
   return sentence
@@ -38,52 +41,60 @@ function capitalize(sentence: string) {
     .join(" ");
 }
 
+function pokeUrl(species: Species) {
+  return `${import.meta.env.BASE_URL}/${species.name}/`;
+}
+
 const { species, last, next } = Astro.props;
 ---
 
 <Base title={capitalize(species.name.replace("-", " "))}>
   {
     [
-      ...(last?.pokemon_v2_pokemons || []),
-      ...(next?.pokemon_v2_pokemons || []),
+      ...(last?.pokemons || []),
+      ...(next?.pokemons || []),
     ].map(
       (pokemon) =>
         pokemon.image && (
           <link slot="head" rel="preload" href={pokemon.image.src} as="image" />
-        )
+        ),
     )
   }
 
-  {last && <link slot="head" rel="prefetch" href={last.name} />}
-  {next && <link slot="head" rel="prefetch" href={next.name} />}
+  {last && <link slot="head" rel="prefetch" href={pokeUrl(last)} />}
+  {next && <link slot="head" rel="prefetch" href={pokeUrl(next)} />}
 
-  <main class="flex flex-row place-items-center justify-center gap-x-5 p-10">
-    {
-      last && (
-        <a href={last.name} data-astro-prefetch="load"
-          id="last" aria-label="Go back to last Pokemon">
-          <Icon name="mdi:menu-left-outline" size={60} />
-        </a>
-      )
-    }
+  <main class="flex flex-row place-items-center justify-center gap-x-5">
+    <a
+      href={last ? pokeUrl(last) : ""}
+      data-astro-prefetch="load"
+      id="last"
+      aria-label="Go back to last Pokemon"
+      class={`${!last ? "invisible" : ""}`}
+    >
+      <Icon name="mdi:menu-left-outline" size={60} />
+    </a>
 
-    <div class="flex flex-col gap-y-4">
+    <div class="flex flex-col gap-y-4 max-h-dvh overflow-scroll p-5">
       {
-        species.pokemon_v2_pokemons.map((pokemon, index) => (
-          <PokeDisplay pokemon={pokemon} loading={index < 3 ? "eager": "lazy"} />
+        species.pokemons.map((pokemon, index) => (
+          <PokeDisplay
+            pokemon={pokemon}
+            loading={index < 3 ? "eager" : "lazy"}
+          />
         ))
       }
     </div>
 
-    {
-      next && (
-        <a href={next.name}
-          data-astro-prefetch="load" id="next"
-          aria-label="Go to next pokemon">
-          <Icon name="mdi:menu-right-outline" size={60} />
-        </a>
-      )
-    }
+    <a
+      href={next ? pokeUrl(next) : ""}
+      data-astro-prefetch="load"
+      id="next"
+      aria-label="Go to next pokemon"
+      class={`${!next ? "invisible" : ""}`}
+    >
+      <Icon name="mdi:menu-right-outline" size={60} />
+    </a>
   </main>
 </Base>
 
@@ -94,11 +105,13 @@ const { species, last, next } = Astro.props;
   function setAnchors() {
     anchorNext = document.getElementById("next") as HTMLAnchorElement | null;
     anchorLast = document.getElementById("last") as HTMLAnchorElement | null;
+
+    if (!anchorNext?.href) anchorNext = null;
+    if (!anchorLast?.href) anchorLast = null;
   }
 
-  setAnchors();
-
   document.addEventListener("astro:after-swap", setAnchors);
+  setAnchors();
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "ArrowRight" || event.key === "ArrowDown")

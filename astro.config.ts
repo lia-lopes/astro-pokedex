@@ -1,6 +1,9 @@
-import { defineConfig } from "astro/config";
+import {
+  defineConfig,
+  fontProviders,
+} from "astro/config";
 import icon from "astro-icon";
-import tailwind from "@astrojs/tailwind";
+import tailwindcss from "@tailwindcss/vite";
 
 type Response = {
   count: number;
@@ -13,7 +16,7 @@ type Response = {
 };
 
 const resultPokemons: Response = await fetch(
-  "https://pokeapi.co/api/v2/pokemon-species?limit=10000"
+  "https://pokeapi.co/api/v2/pokemon-species?limit=10000",
 ).then((response) => response.json());
 
 const speciesNames = resultPokemons.results
@@ -22,22 +25,39 @@ const speciesNames = resultPokemons.results
 
 // https://astro.build/config
 export default defineConfig({
-  output: "static",
   prefetch: true,
-  site: "https://amemeida.github.io",
+  site: "https://lia-lopes.github.io",
   base: "astro-pokedex",
   redirects: {
     ...Object.fromEntries(
-      speciesNames.map((name, index) => [`/astro-pokedex/${index + 1}`, `/astro-pokedex/${name}/`])
+      speciesNames.map((name, index) => [
+        `/astro-pokedex/${index + 1}`,
+        `/astro-pokedex/${name}/`,
+      ]),
     ),
+  },
+  fonts: [
+    {
+      provider: fontProviders.fontsource(),
+      name: "Nunito",
+      cssVariable: "--font-nunito",
+      weights: [400, 700],
+    },
+  ],
+  experimental: {
+    clientPrerender: true,
+    queuedRendering: {
+      enabled: true,
+    },
   },
   image: {
     domains: ["raw.githubusercontent.com"],
   },
-  integrations: [
-    icon(),
-    tailwind({
-      configFile: "tailwind.config.ts",
-    }),
-  ],
+  build: {
+    concurrency: 8
+  },
+  vite: {
+    plugins: [tailwindcss()],
+  },
+  integrations: [icon()],
 });

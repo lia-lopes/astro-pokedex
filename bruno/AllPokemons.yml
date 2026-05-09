@@ -1,0 +1,48 @@
+info:
+  name: AllPokemons
+  type: graphql
+  seq: 1
+
+graphql:
+  method: POST
+  url: https://graphql.pokeapi.co/v1beta2
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: X-Method-Used
+      value: application/graphql
+  body:
+    query: |
+      query getPokemon {
+        pokemonspecies(order_by: {id: asc}) {
+          name
+          id
+          pokemons {
+            id
+            name
+            height
+            weight
+            types: pokemontypes {
+              type {
+                name  
+              }
+            }
+            abilities: pokemonabilities {
+              ability {
+      					name  
+              }
+              is_hidden
+            }
+            sprites: pokemonsprites {
+              sprites(path: "front_default")
+            }
+          }
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

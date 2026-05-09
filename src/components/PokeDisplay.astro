@@ -1,24 +1,24 @@
 ---
 import TypeCards from "./pokemon/TypeCards.astro";
 import AbilityList from "./pokemon/AbilityList.astro";
-import { substituteImage, type Pokemon } from "../pokeapi/pokemon";
+import { substitute, type Pokemon } from "../pokeapi/pokemon";
 import PokeName from "./pokemon/PokeName.astro";
 import { Image } from "astro:assets";
 
 interface Props {
   pokemon: Pokemon;
-  loading?: "eager" | "lazy"
+  loading?: "eager" | "lazy";
 }
 
 const { pokemon, loading = "eager" } = Astro.props;
 ---
 
-<section class="grid grid-cols-[1fr_0.6fr] gap-x-8">
+<section
+  class="grid grid-cols-[1fr_0.6fr] gap-x-6 max-w-2xl justify-items-center"
+>
   <Image
-    class="ring ring-slate-600 rounded-lg p-4"
-    src={pokemon.image
-      ? pokemon.image.src
-      : substituteImage.src}
+    class="border border-slate-600 rounded-lg px-2"
+    src={pokemon.image ? pokemon.image.src : substitute.src}
     alt={pokemon.name}
     width={400}
     loading={loading}
@@ -28,10 +28,10 @@ const { pokemon, loading = "eager" } = Astro.props;
   <article class="flex flex-col gap-y-6">
     <div class="pt-2 mb-2">
       <PokeName name={pokemon.name} id={pokemon.id} />
-      <TypeCards types={pokemon.pokemon_v2_pokemontypes} />
+      <TypeCards types={pokemon.types} />
     </div>
 
-    <AbilityList abilities={pokemon.pokemon_v2_pokemonabilities} />
+    <AbilityList abilities={pokemon.abilities} />
 
     <table class="grid grid-cols-2">
       <thead class="ml-10 col-span-2">
@@ -50,26 +50,3 @@ const { pokemon, loading = "eager" } = Astro.props;
     </table>
   </article>
 </section>
-
-<style>
-  .section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-
-    column-gap: 3rem;
-  }
-
-  .section > .div {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .article {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    row-gap: 1rem;
-  }
-</style>
