@@ -49,20 +49,19 @@ const { species, last, next } = Astro.props;
 ---
 
 <Base title={capitalize(species.name.replace("-", " "))}>
-  {
-    [
-      ...(last?.pokemons || []),
-      ...(next?.pokemons || []),
-    ].map(
-      (pokemon) =>
-        pokemon.image && (
-          <link slot="head" rel="preload" href={pokemon.image.src} as="image" />
-        ),
-    )
-  }
+  <Fragment slot="head">
+    {
+      [...(last?.pokemons || []), ...(next?.pokemons || [])].map(
+        (pokemon) =>
+          pokemon.image && (
+            <link rel="preload" href={pokemon.image.src} as="image" />
+          ),
+      )
+    }
 
-  {last && <link slot="head" rel="prefetch" href={pokeUrl(last)} />}
-  {next && <link slot="head" rel="prefetch" href={pokeUrl(next)} />}
+    {last && <link rel="prefetch" href={pokeUrl(last)} />}
+    {next && <link rel="prefetch" href={pokeUrl(next)} />}
+  </Fragment>
 
   <main class="flex flex-row place-items-center justify-center gap-x-5">
     <a
