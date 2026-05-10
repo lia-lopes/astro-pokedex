@@ -9,12 +9,13 @@ export const prerender = true;
 
 interface Props {
   species: Species;
+  mode?: "name" | "number" | "undefined";
   next?: Species;
   last?: Species;
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const routes = pokemons.map((species) => ({
+  const nameRoutes = pokemons.map((species) => ({
     params: { pokemon: `${species.name}/` },
     props: {
       species,
@@ -23,12 +24,23 @@ export const getStaticPaths: GetStaticPaths = async () => {
     },
   }));
 
+  const numberRoutes = pokemons.map((species) => ({
+    params: { pokemon: `${species.id}/` },
+    props: {
+      species,
+      mode: "number",
+      last: pokemons[species.id - 2],
+      next: pokemons[species.id],
+    },
+  }));
+
   return [
     {
       params: { pokemon: "/" },
-      props: routes[0]!.props,
+      props: nameRoutes[0]!.props,
     },
-    ...routes,
+    ...nameRoutes,
+    ...numberRoutes,
   ];
 };
 
@@ -41,11 +53,11 @@ function capitalize(sentence: string) {
     .join(" ");
 }
 
-function pokeUrl(species: Species) {
-  return `${import.meta.env.BASE_URL}/${species.name}/`;
-}
+const { species, last, next, mode } = Astro.props;
 
-const { species, last, next } = Astro.props;
+function pokeUrl(species: Species) {
+  return `${import.meta.env.BASE_URL}/${mode === "number" ? species.id : species.name}/`;
+}
 ---
 
 <Base title={capitalize(species.name.replace("-", " "))}>
@@ -63,54 +75,81 @@ const { species, last, next } = Astro.props;
     {next && <link rel="prefetch" href={pokeUrl(next)} />}
   </Fragment>
 
-  <main class="flex flex-row place-items-center justify-center gap-x-5">
-    <a
-      href={last ? pokeUrl(last) : ""}
-      data-astro-prefetch="load"
-      id="last"
-      aria-label="Go back to last Pokemon"
-      class={`${!last ? "invisible" : ""}`}
-    >
-      <Icon name="mdi:menu-left-outline" size={60} />
-    </a>
+  <main class="flex flex-row place-items-center justify-center">
+    {
+      last ? (
+        <a
+          href={last ? pokeUrl(last) : ""}
+          data-astro-prefetch="load"
+          id="last"
+          aria-label="Go back to last Pokemon"
+          aria-disabled={!last}
+          class="flex-1 h-full justify-end items-center px-5 hidden md:flex"
+        >
+          <Icon name="mdi:menu-left-outline" size={60} />
+        </a>
+      ) : (
+        <div class="flex-1 h-full justify-end items-center px-5 hidden md:flex" />
+      )
+    }
 
-    <div class="flex flex-col gap-y-4 max-h-dvh overflow-scroll p-5">
+    <div
+      class="lg:min-w-220 flex flex-col gap-y-4 md:max-h-dvh md:overflow-auto py-6"
+    >
       {
         species.pokemons.map((pokemon, index) => (
           <PokeDisplay
             pokemon={pokemon}
             loading={index < 3 ? "eager" : "lazy"}
+            index={index}
           />
         ))
       }
     </div>
 
-    <a
-      href={next ? pokeUrl(next) : ""}
-      data-astro-prefetch="load"
-      id="next"
-      aria-label="Go to next pokemon"
-      class={`${!next ? "invisible" : ""}`}
-    >
-      <Icon name="mdi:menu-right-outline" size={60} />
-    </a>
+    {
+      next ? (
+        <a
+          href={next ? pokeUrl(next) : ""}
+          data-astro-prefetch="load"
+          id="next"
+          aria-label="Go to next Pokemon"
+          aria-disabled={!next}
+          class="flex-1 h-full justify-start items-center px-5 hidden md:flex"
+        >
+          <Icon name="mdi:menu-right-outline" size={60} />
+        </a>
+      ) : (
+        <div class="flex-1 h-full justify-start items-center px-5 hidden md:flex" />
+      )
+    }
   </main>
 </Base>
 
 <script>
   let anchorNext: HTMLAnchorElement | null;
   let anchorLast: HTMLAnchorElement | null;
+  let gestureZone: HTMLElement;
 
-  function setAnchors() {
+  function setActions() {
     anchorNext = document.getElementById("next") as HTMLAnchorElement | null;
     anchorLast = document.getElementById("last") as HTMLAnchorElement | null;
+    gestureZone = document.getElementsByTagName("main")![0]!;
 
-    if (!anchorNext?.href) anchorNext = null;
-    if (!anchorLast?.href) anchorLast = null;
+    gestureZone.addEventListener("touchstart", (e) => {
+      touchstartX = e?.changedTouches[0]?.screenX || 0;
+      console.log("Touch start:", touchstartX);
+    });
+
+    gestureZone.addEventListener("touchend", (e) => {
+      touchendX = e?.changedTouches[0]?.screenX || 0;
+      console.log("Touch end:", touchendX);
+      handleGesture();
+    });
   }
 
-  document.addEventListener("astro:after-swap", setAnchors);
-  setAnchors();
+  document.addEventListener("astro:after-swap", setActions);
+  setActions();
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "ArrowRight" || event.key === "ArrowDown")
@@ -121,4 +160,18 @@ const { species, last, next } = Astro.props;
     if (event.key === "ArrowLeft" || event.key === "ArrowUp")
       anchorLast?.click();
   });
+
+  let touchstartX = 0;
+  let touchendX = 0;
+
+  function handleGesture() {
+    const screenSize = window.innerWidth;
+    const threshold = Math.min(100, screenSize * 0.2);
+
+    if (touchendX < touchstartX - threshold) {
+      anchorNext?.click();
+    } else if (touchendX > touchstartX + threshold) {
+      anchorLast?.click();
+    }
+  }
 </script>

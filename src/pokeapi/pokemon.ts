@@ -100,6 +100,7 @@ export const substitute = await getImage({
   src: substituteSprite,
   width: 96,
   height: 96,
+  format: "png",
   quality: "high",
 });
 
@@ -123,16 +124,16 @@ export const {
         const sprite = pokemon.sprites[0]?.sprites ?? undefined;
 
         if (!sprite) {
-          pokemon.image = substitute;
           continue;
         }
 
         promises.push(
           getImage({
             src: sprite,
-            width: 96,
-            height: 96,
             quality: "high",
+            format: "png",
+            height: 96,
+            width: 96,
           }).then((image) => {
             pokemon.image = image;
           }),

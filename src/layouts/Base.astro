@@ -11,7 +11,7 @@ const { title } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en" transition:animate="initial">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -21,7 +21,7 @@ const { title } = Astro.props;
     <slot name="head" />
     <title>{title}</title>
   </head>
-  <body>
+  <body class="dark:bg-gray-900 text-gray-200">
     <slot />
   </body>
 </html>
@@ -34,7 +34,7 @@ const { title } = Astro.props;
   }
 
   body {
-    font-family: "Nunito", sans-serif;
+    font-family: var(--font-nunito), sans-serif;
 
     display: flex;
   }

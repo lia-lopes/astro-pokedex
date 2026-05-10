@@ -8,8 +8,8 @@ interface Props {
 const { abilities } = Astro.props;
 ---
 
-<div>
-  <span class="text-lg font-bold">Abilities:</span>
+<div class="bg-gray-300 dark:bg-gray-800 px-4 py-2 md:px-6 rounded md:min-w-45">
+  <span class="block text-center text-lg font-bold mb-1">Abilities</span>
 
   <ul>
     {
@@ -17,7 +17,7 @@ const { abilities } = Astro.props;
         !is_hidden ? (
           <li class="capitalize">{name.replaceAll("-", " ")}</li>
         ) : (
-          <li class="capitalize text-gray-600">{name.replaceAll("-", " ")}</li>
+          <li class="capitalize opacity-50">{name.replaceAll("-", " ")}</li>
         ),
       )
     }

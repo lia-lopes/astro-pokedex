@@ -8,45 +8,53 @@ import { Image } from "astro:assets";
 interface Props {
   pokemon: Pokemon;
   loading?: "eager" | "lazy";
+  index?: number;
 }
 
-const { pokemon, loading = "eager" } = Astro.props;
+const { pokemon, loading = "eager", index = 0 } = Astro.props;
+
+console.log(pokemon.image?.srcSet.attribute);
 ---
 
-<section
-  class="grid grid-cols-[1fr_0.6fr] gap-x-6 max-w-2xl justify-items-center"
->
+<section class="flex flex-col md:flex-row px-2 gap-6" transition:name={`pokemon-display-${index}`}>
   <Image
-    class="border border-slate-600 rounded-lg px-2"
-    src={pokemon.image ? pokemon.image.src : substitute.src}
-    alt={pokemon.name}
-    width={400}
+    class="border border-slate-600 dark:border-slate-400 rounded-lg px-2 [image-rendering:pixelated]"
+    alt={pokemon?.name ? `Image of ${pokemon.name}` : "Substitute image"}
     loading={loading}
-    height={400}
+    src={pokemon.image?.src || substitute.src}
+    height={450}
+    width={450}
+    layout="constrained"
   />
 
-  <article class="flex flex-col gap-y-6">
-    <div class="pt-2 mb-2">
+  <article class="flex-1">
+    <div class="pt-2 mb-5 flex flex-col md:gap-y-2 items-center md:items-start">
       <PokeName name={pokemon.name} id={pokemon.id} />
       <TypeCards types={pokemon.types} />
     </div>
 
-    <AbilityList abilities={pokemon.abilities} />
+    <div
+      class="mx-auto md:mx-0 md:w-min lg:w-full flex md:px-0 px-4 flex-row flex-wrap gap-4 md:gap-x-6 justify-around md:justify-between"
+    >
+      <AbilityList abilities={pokemon.abilities} />
 
-    <table class="grid grid-cols-2">
-      <thead class="ml-10 col-span-2">
-        <th colspan="2">Info</th>
-      </thead>
-      <tbody class="pr-10">
-        <tr class="flex-1 flex flex-row justify-between">
-          <th class="pr-10">Height:</th>
-          <td>{pokemon.height / 10}m</td>
-        </tr>
-        <tr class="flex flex-row justify-between">
-          <th class="pr-10">Weight:</th>
-          <td>{pokemon.weight / 10}kg</td>
-        </tr>
-      </tbody>
-    </table>
+      <table
+        class="flex flex-col bg-gray-300 dark:bg-gray-800 px-4 py-2 md:px-6 rounded md:min-w-45 items-center"
+      >
+        <thead>
+          <th class="block text-center font-bold pb-1">Info</th>
+        </thead>
+        <tbody class="w-full">
+          <tr class="flex flex-row gap-x-3 justify-around md:justify-between">
+            <th>Height:</th>
+            <td>{pokemon.height / 10}m</td>
+          </tr>
+          <tr class="flex flex-row gap-x-3 justify-around md:justify-between">
+            <th>Weight:</th>
+            <td>{pokemon.weight / 10}kg</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </article>
 </section>
