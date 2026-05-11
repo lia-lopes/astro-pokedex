@@ -2,10 +2,8 @@
 import type { GetStaticPaths } from "astro";
 import Base from "../layouts/Base.astro";
 import PokeDisplay from "../components/PokeDisplay.astro";
-import { pokemons, type Species } from "../pokeapi/pokemon";
+import { pokemons, substituteTrimmed, type Species } from "../pokeapi/pokemon";
 import { Icon } from "astro-icon/components";
-
-export const prerender = true;
 
 interface Props {
   species: Species;
@@ -63,16 +61,22 @@ function pokeUrl(species: Species) {
 <Base title={capitalize(species.name.replace("-", " "))}>
   <Fragment slot="head">
     {
-      [...(last?.pokemons || []), ...(next?.pokemons || [])].map(
-        (pokemon) =>
-          pokemon.image && (
-            <link rel="preload" href={pokemon.image.src} as="image" />
-          ),
-      )
+      [...(last?.pokemons || []), ...(next?.pokemons || [])]
+        .filter((pokemon) => pokemon.image)
+        .map((pokemon) => (
+          <link rel="preload" href={pokemon.image!.src} as="image" />
+        ))
     }
 
+    <link
+      rel="icon"
+      type="image/png"
+      href={species.icon?.src || substituteTrimmed.src}
+    />
     {last && <link rel="prefetch" href={pokeUrl(last)} />}
     {next && <link rel="prefetch" href={pokeUrl(next)} />}
+    {last?.icon && <link rel="preload" href={last.icon!.src} as="image" />}
+    {next?.icon && <link rel="preload" href={next.icon!.src} as="image" />}
   </Fragment>
 
   <main class="flex flex-row place-items-center justify-center">
@@ -94,7 +98,7 @@ function pokeUrl(species: Species) {
     }
 
     <div
-      class="lg:min-w-220 flex flex-col gap-y-4 md:max-h-dvh md:overflow-auto py-6"
+      class="lg:w-220 flex flex-col gap-y-4 md:max-h-dvh md:overflow-auto py-6"
     >
       {
         species.pokemons.map((pokemon, index) => (

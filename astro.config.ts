@@ -1,7 +1,4 @@
-import {
-  defineConfig,
-  fontProviders,
-} from "astro/config";
+import { defineConfig, fontProviders } from "astro/config";
 import icon from "astro-icon";
 import tailwindcss from "@tailwindcss/vite";
 
@@ -26,13 +23,20 @@ export default defineConfig({
   },
   image: {
     domains: ["raw.githubusercontent.com"],
-    responsiveStyles: true
+    responsiveStyles: true,
+    service: {
+      entrypoint: "src/lib/imageService.ts",
+    }
   },
   build: {
-    concurrency: 8
+    concurrency: 8,
   },
   vite: {
     plugins: [tailwindcss()],
   },
-  integrations: [icon()],
+  integrations: [icon({
+    include: {
+      "mdi": ["menu-left-outline", "menu-right-outline"],
+    }
+  })],
 });

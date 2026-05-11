@@ -7,7 +7,7 @@ interface Props {
 const { name, id } = Astro.props;
 ---
 
-<h2 class="capitalize mb-2 text-2xl">
-  {name.replaceAll("-", " ")}
+<h2 class="capitalize w-fit mb-2 text-2xl flex flex-row flex-wrap gap-x-2 items-center">
+  <span class="w-max">{name.replaceAll("-", " ")}</span>
   <span class="italic">#{id}</span>
 </h2>

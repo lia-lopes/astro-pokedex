@@ -28,6 +28,7 @@ export type Species = {
   name: string;
   id: number;
   pokemons: Pokemon[];
+  icon?: GetImageResult;
 };
 
 export type Pokemon = {
@@ -104,6 +105,15 @@ export const substitute = await getImage({
   quality: "high",
 });
 
+export const substituteTrimmed = await getImage({
+  src: substituteSprite,
+  width: 96,
+  height: 96,
+  format: "png",
+  quality: "high",
+  trim: true,
+});
+
 console.log("Substitute image loaded.");
 
 console.log("Fetching...");
@@ -120,6 +130,8 @@ export const {
     const promises = [];
 
     for (const species of pokemons.data.pokemonspecies) {
+      let hasIcon = false;
+
       for (const pokemon of species.pokemons) {
         const sprite = pokemon.sprites[0]?.sprites ?? undefined;
 
@@ -130,7 +142,6 @@ export const {
         promises.push(
           getImage({
             src: sprite,
-            quality: "high",
             format: "png",
             height: 96,
             width: 96,
@@ -138,6 +149,23 @@ export const {
             pokemon.image = image;
           }),
         );
+
+        if (!hasIcon) {
+          hasIcon = true;
+
+          promises.push(
+            getImage({
+              src: sprite,
+              format: "png",
+              height: 96,
+              width: 96,
+              trim: true,
+            }).then((image) => {
+              species.icon = image;
+            }),
+          );
+        }
+
       }
     }
 
